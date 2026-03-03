@@ -1,6 +1,6 @@
 (function () {
     function init() {
-      var videos = document.querySelectorAll('.g_visual_wrap video[data-hls-src]');
+      var videos = document.querySelectorAll('video[data-hls-src]');
   
       if (videos.length === 0) return;
   
