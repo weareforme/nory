@@ -32,10 +32,17 @@
               }
             });
 
+            hls.on(Hls.Events.MEDIA_ATTACHED, function () {
+              video.muted = true;
+              video.play().catch(function () {});
+            });
+
             hls.loadSource(src);
             hls.attachMedia(video);
           } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = src;
+            video.muted = true;
+            video.play().catch(function () {});
           }
           observer.unobserve(video);
         }
