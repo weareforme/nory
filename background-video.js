@@ -46,7 +46,10 @@
               }
 
               hls.on(Hls.Events.MANIFEST_PARSED, selectBestLevel);
-              hls.on(Hls.Events.BUFFER_APPENDED, selectBestLevel);
+              hls.on(Hls.Events.BUFFER_APPENDED, function onBuffer() {
+                selectBestLevel();
+                hls.off(Hls.Events.BUFFER_APPENDED, onBuffer);
+              });
 
               hls.loadSource(src);
               hls.attachMedia(video);
