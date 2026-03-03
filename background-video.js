@@ -29,7 +29,8 @@
               });
 
               hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                var playerWidth = video.offsetWidth * (window.devicePixelRatio || 1);
+                var container = video.closest('.g_visual_wrap') || video.parentElement;
+                var playerWidth = container.offsetWidth * (window.devicePixelRatio || 1);
                 var bestLevel = -1;
                 var bestWidth = 0;
                 hls.levels.forEach(function (level, i) {
