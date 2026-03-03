@@ -28,7 +28,7 @@
                 abrEwmaDefaultEstimate: 8000000
               });
 
-              hls.on(Hls.Events.MANIFEST_PARSED, function () {
+              function selectBestLevel() {
                 var container = video.closest('.g_visual_wrap') || video.parentElement;
                 var playerWidth = container.offsetWidth * (window.devicePixelRatio || 1);
                 var bestLevel = -1;
@@ -40,10 +40,13 @@
                   }
                 });
                 if (bestLevel >= 0) {
-                  hls.startLevel = bestLevel;
+                  hls.currentLevel = bestLevel;
                   hls.nextLoadLevel = bestLevel;
                 }
-              });
+              }
+
+              hls.on(Hls.Events.MANIFEST_PARSED, selectBestLevel);
+              hls.on(Hls.Events.BUFFER_APPENDED, selectBestLevel);
 
               hls.loadSource(src);
               hls.attachMedia(video);
