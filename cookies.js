@@ -32,19 +32,19 @@ j=d.createElement(s);j.async=true;j.src=
   document.head.insertBefore(gtmScript, document.head.firstChild);
 
   // ==== Load and Initialize Google Ads ====
-  console.log("[Cookie] Loading Google Ads library...");
+  // console.log("[Cookie] Loading Google Ads library...");
 
-  const gtagScript = document.createElement("script");
-  gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=AW-11149818068";
-  gtagScript.async = true;
-  document.head.appendChild(gtagScript);
+  // const gtagScript = document.createElement("script");
+  // gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=AW-11149818068";
+  // gtagScript.async = true;
+  // document.head.appendChild(gtagScript);
 
-  gtagScript.onload = function () {
-    console.log("[Cookie] Google Ads library loaded, initializing...");
-    window.gtag = window.gtag || function () { dataLayer.push(arguments); };
-    window.gtag('js', new Date());
-    window.gtag('config', 'AW-11149818068');
-  };
+  // gtagScript.onload = function () {
+  //   console.log("[Cookie] Google Ads library loaded, initializing...");
+  //   window.gtag = window.gtag || function () { dataLayer.push(arguments); };
+  //   window.gtag('js', new Date());
+  //   window.gtag('config', 'AW-11149818068');
+  // };
 
   // ==== Load Segment Separately (only if accepted) ====
   function loadSegment() {
