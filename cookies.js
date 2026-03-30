@@ -1,4 +1,4 @@
-window.addEventListener("load", function () {
+function initCookies() {
   const banner = document.getElementById("cookie-banner");
   const acceptBtn = document.getElementById("cookie-accept");
   const rejectBtn = document.getElementById("cookie-reject");
@@ -6,7 +6,6 @@ window.addEventListener("load", function () {
 
   // ==== Set Consent Mode Defaults BEFORE GTM Loads ====
   window.dataLayer = window.dataLayer || [];
-
   window.gtag = window.gtag || function () { dataLayer.push(arguments); };
 
   gtag('consent', 'default', {
@@ -22,8 +21,8 @@ window.addEventListener("load", function () {
     ]
   });
 
-  // ==== Load GTM Immediately ====
-  console.log("[Cookie] Injecting full GTM snippet...");
+  // ==== Load GTM ====
+  console.log("[Cookie] Injecting GTM...");
   const gtmScript = document.createElement("script");
   gtmScript.innerHTML = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -35,13 +34,11 @@ j=d.createElement(s);j.async=true;j.src=
   // ==== Load and Initialize Google Ads ====
   console.log("[Cookie] Loading Google Ads library...");
 
-  // First, load the gtag.js library from Google
   const gtagScript = document.createElement("script");
   gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=AW-11149818068";
   gtagScript.async = true;
   document.head.appendChild(gtagScript);
 
-  // Then initialize it when loaded
   gtagScript.onload = function () {
     console.log("[Cookie] Google Ads library loaded, initializing...");
     window.gtag = window.gtag || function () { dataLayer.push(arguments); };
@@ -96,7 +93,6 @@ j=d.createElement(s);j.async=true;j.src=
   // ==== Update Consent Settings Post-User Choice ====
   function updateConsent(consent) {
     const state = consent ? 'granted' : 'denied';
-
     console.log(`[Cookie] Updating consent: ${state}`);
 
     gtag('consent', 'update', {
@@ -107,13 +103,12 @@ j=d.createElement(s);j.async=true;j.src=
       ad_personalization: state
     });
 
-    // Push to dataLayer for GTM tracking
     dataLayer.push({
       event: 'cookie_consent_update',
       consent_ad_storage: state,
       consent_analytics_storage: state,
       consent_functionality_storage: state,
-      consent_ad_user_data: 'granted', // Always granted for conversions
+      consent_ad_user_data: 'granted',
       consent_ad_personalization: state
     });
   }
@@ -129,7 +124,7 @@ j=d.createElement(s);j.async=true;j.src=
     updateConsent(consent);
 
     if (consent) {
-      loadSegment(); // optional tags go here
+      loadSegment();
     }
   }
 
@@ -158,4 +153,11 @@ j=d.createElement(s);j.async=true;j.src=
       handleConsent(preferencesCheckbox.checked);
     });
   }
-});
+}
+
+// ==== DOM-Ready Wrapper ====
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCookies);
+} else {
+  initCookies();
+}
