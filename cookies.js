@@ -30,6 +30,8 @@ j=d.createElement(s);j.async=true;j.src=
 'https://load.sst.nory.ai/gtm.js?'+i;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','id=GTM-TSMXKK9');`;
   document.head.insertBefore(gtmScript, document.head.firstChild);
+  // ==== Load ads ====
+  console.log("[Cookie] Injecting GTM (GTM will handle Google Ads load)...");
 
   // ==== Load and Initialize Google Ads ====
   // console.log("[Cookie] Loading Google Ads library...");
