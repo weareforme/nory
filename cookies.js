@@ -87,7 +87,9 @@ j=d.createElement(s);j.async=true;j.src=
         window.analytics._writeKey = "E3Y9Km9MK7PgAmMT6FKBgVidLmwt7KtQ";
         window.analytics.SNIPPET_VERSION = "5.2.0";
         window.analytics.load("E3Y9Km9MK7PgAmMT6FKBgVidLmwt7KtQ");
-        window.analytics.page();
+        window.analytics.page(Object.assign({
+          page_url: window.location.href
+        }, window.getSessionUTMs ? window.getSessionUTMs() : {}));
       }
     }
   }
