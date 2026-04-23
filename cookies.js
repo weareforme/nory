@@ -49,50 +49,65 @@ j=d.createElement(s);j.async=true;j.src=
   // };
 
   // ==== Load Segment Separately (only if accepted) ====
-  // function loadSegment() {
-  //   console.log("[Cookie] Injecting Segment...");
-  //   window.analytics = window.analytics || [];
-  //   if (!window.analytics.initialize) {
-  //     if (window.analytics.invoked) {
-  //       console.error("Segment snippet included twice.");
-  //     } else {
-  //       window.analytics.invoked = true;
-  //       window.analytics.methods = [
-  //         "trackSubmit", "trackClick", "trackLink", "trackForm", "pageview", "identify",
-  //         "reset", "group", "track", "ready", "alias", "debug", "page", "screen",
-  //         "once", "off", "on", "addSourceMiddleware", "addIntegrationMiddleware",
-  //         "setAnonymousId", "addDestinationMiddleware", "register"
-  //       ];
-  //       window.analytics.factory = function (method) {
-  //         return function () {
-  //           const args = Array.prototype.slice.call(arguments);
-  //           args.unshift(method);
-  //           window.analytics.push(args);
-  //           return window.analytics;
-  //         };
-  //       };
-  //       for (let i = 0; i < window.analytics.methods.length; i++) {
-  //         const key = window.analytics.methods[i];
-  //         window.analytics[key] = window.analytics.factory(key);
-  //       }
-  //       window.analytics.load = function (key, options) {
-  //         const t = document.createElement("script");
-  //         t.type = "text/javascript";
-  //         t.async = true;
-  //         t.src = "https://cdn.segment.com/analytics.js/v1/" + key + "/analytics.min.js";
-  //         const s = document.getElementsByTagName("script")[0];
-  //         s.parentNode.insertBefore(t, s);
-  //         window.analytics._loadOptions = options;
-  //       };
-  //       window.analytics._writeKey = "E3Y9Km9MK7PgAmMT6FKBgVidLmwt7KtQ";
-  //       window.analytics.SNIPPET_VERSION = "5.2.0";
-  //       window.analytics.load("E3Y9Km9MK7PgAmMT6FKBgVidLmwt7KtQ");
-  //       window.analytics.page(Object.assign({
-  //         page_url: window.location.href
-  //       }, window.getSessionUTMs ? window.getSessionUTMs() : {}));
-  //     }
-  //   }
-  // }
+  function loadSegment() {
+    console.log("[Cookie] Injecting Segment...");
+    var i = "analytics";
+    var analytics = window[i] = window[i] || [];
+    if (!analytics.initialize) {
+      if (analytics.invoked) {
+        window.console && console.error && console.error("Segment snippet included twice.");
+      } else {
+        analytics.invoked = true;
+        analytics.methods = [
+          "trackSubmit", "trackClick", "trackLink", "trackForm", "pageview", "identify",
+          "reset", "group", "track", "ready", "alias", "debug", "page", "screen",
+          "once", "off", "on", "addSourceMiddleware", "addIntegrationMiddleware",
+          "setAnonymousId", "addDestinationMiddleware", "register"
+        ];
+        analytics.factory = function (e) {
+          return function () {
+            if (window[i].initialized) return window[i][e].apply(window[i], arguments);
+            var n = Array.prototype.slice.call(arguments);
+            if (["track", "screen", "alias", "group", "page", "identify"].indexOf(e) > -1) {
+              var c = document.querySelector("link[rel='canonical']");
+              n.push({
+                __t: "bpc",
+                c: c && c.getAttribute("href") || void 0,
+                p: location.pathname,
+                u: location.href,
+                s: location.search,
+                t: document.title,
+                r: document.referrer
+              });
+            }
+            n.unshift(e);
+            analytics.push(n);
+            return analytics;
+          };
+        };
+        for (var n = 0; n < analytics.methods.length; n++) {
+          var key = analytics.methods[n];
+          analytics[key] = analytics.factory(key);
+        }
+        analytics.load = function (key, n) {
+          var t = document.createElement("script");
+          t.type = "text/javascript";
+          t.async = true;
+          t.setAttribute("data-global-segment-analytics-key", i);
+          t.src = "https://cdn.segment.com/analytics.js/v1/" + key + "/analytics.min.js";
+          var r = document.getElementsByTagName("script")[0];
+          r.parentNode.insertBefore(t, r);
+          analytics._loadOptions = n;
+        };
+        analytics._writeKey = "E3Y9Km9MK7PgAmMT6FKBgVidLmwt7KtQ";
+        analytics.SNIPPET_VERSION = "5.2.0";
+        analytics.load("E3Y9Km9MK7PgAmMT6FKBgVidLmwt7KtQ");
+        analytics.page(Object.assign({
+          page_url: window.location.href
+        }, window.getSessionUTMs ? window.getSessionUTMs() : {}));
+      }
+    }
+  }
 
   // ==== Update Consent Settings Post-User Choice ====
   function updateConsent(consent) {
@@ -127,9 +142,9 @@ j=d.createElement(s);j.async=true;j.src=
 
     updateConsent(consent);
 
-    // if (consent) {
-    //   loadSegment();
-    // }
+    if (consent) {
+      loadSegment();
+    }
   }
 
   // ==== Check Cookie on Load ====
@@ -139,9 +154,9 @@ j=d.createElement(s);j.async=true;j.src=
 
   if (consentSet) {
     updateConsent(consentGiven);
-    // if (consentGiven) {
-    //   loadSegment();
-    // }
+    if (consentGiven) {
+      loadSegment();
+    }
   }
 
   if (banner) {
