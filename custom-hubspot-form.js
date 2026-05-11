@@ -3,6 +3,23 @@
 // Covers: Role, ePOS dropdowns, and the phone country picker.
 
 (function () {
+    // Reads the correct HubSpot option values from the island config already on
+    // the page, keyed by display label. Falls back to label text if not found.
+    function getHubSpotOptionValues() {
+        try {
+            const islands = window.__islands || [];
+            const form = islands[0]?.props?.renderDefinition?.form;
+            if (!form) return null;
+            const allModules = form.modules.flatMap(s => s.modules || [])
+                .flatMap(r => r.modules || []);
+            const dropdown = allModules.find(m => m.type === 'dropdownSelect');
+            if (!dropdown) return null;
+            return Object.fromEntries(dropdown.options.map(o => [o.label, o.value]));
+        } catch (e) {
+            return null;
+        }
+    }
+
     // Role / ePOS dropdowns
     // HubSpot stores the selected value in a hidden input — we sync our native
     // select to that input using the native React setter so HubSpot detects it.
@@ -15,6 +32,8 @@
             const items = field.querySelectorAll('.hsfc-DropdownOptions__List__ListItem');
             if (!dropdownInput || !items.length) return;
 
+            const valueMap = getHubSpotOptionValues();
+
             const select = document.createElement('select');
             select.className = 'nory-select';
 
@@ -26,9 +45,10 @@
             select.appendChild(blank);
 
             items.forEach(function (item) {
+                const label = item.textContent.trim();
                 const opt = document.createElement('option');
-                opt.value = item.textContent.trim();
-                opt.textContent = item.textContent.trim();
+                opt.value = valueMap?.[label] || label;
+                opt.textContent = label;
                 select.appendChild(opt);
             });
 
