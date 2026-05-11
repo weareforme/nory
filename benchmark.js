@@ -102,7 +102,8 @@ setTimeout(function () {
 async function loadBenchmarkData() {
     try {
         // Fetch directly from Nory CDN
-        const apiUrl = 'https://cdn.nory.ai/benchmark-flash-pnl.json';
+        // const apiUrl = 'https://cdn.nory.ai/benchmark-flash-pnl.json';
+        const apiUrl = 'https://corsproxy.io/?url=https://cdn.nory.ai/benchmark-flash-pnl.json';
 
         const response = await fetch(apiUrl);
         const data = await response.json();
