@@ -50,7 +50,7 @@
           color: transparent !important;
           opacity: 0 !important;
         }
-        
+
         #benchmark-form-visible button[data-hsfc-id="Button"].btn-validation-disabled,
         #benchmark-form-visible button[type="submit"].btn-validation-disabled,
         #benchmark-form-visible .hsfc-NavigationRow .hsfc-NavigationRow__Buttons button[type="submit"].btn-validation-disabled,
@@ -58,11 +58,6 @@
           opacity: 0.5 !important;
           pointer-events: none !important;
           cursor: not-allowed !important;
-        }
-        
-        /* Keep button styled during HubSpot loading state */
-        #benchmark-form-visible button.hsfc-Button--loading {
-          /* Preserve all Webflow styles */
         }
       `;
             document.head.appendChild(style);
@@ -83,50 +78,6 @@
             attributeFilter: ['placeholder'],
             subtree: true
         });
-
-        // Protect Submit button classes from being replaced
-        function protectSubmitButton() {
-            const submitButton = formWrapper.querySelector('button[type="submit"]');
-
-            if (submitButton && !submitButton.dataset.protected) {
-                submitButton.dataset.protected = 'true';
-
-                const originalClasses = submitButton.className;
-                console.log('🛡️ Protecting Submit button classes:', originalClasses);
-
-                const classObserver = new MutationObserver((mutations) => {
-                    mutations.forEach((mutation) => {
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                            const currentClasses = submitButton.className;
-
-                            if (!currentClasses.includes('_wf-hs_button')) {
-                                console.log('⚠️ Webflow classes removed, restoring...');
-
-                                const hubspotClasses = currentClasses.split(' ').filter(c => c.startsWith('hsfc-'));
-                                const webflowClasses = originalClasses.split(' ').filter(c => !c.startsWith('hsfc-'));
-                                const combinedClasses = [...webflowClasses, ...hubspotClasses].join(' ');
-
-                                // Disconnect before restoring to avoid triggering the observer again
-                                classObserver.disconnect();
-                                submitButton.className = combinedClasses;
-                                classObserver.observe(submitButton, {
-                                    attributes: true,
-                                    attributeOldValue: true,
-                                    attributeFilter: ['class']
-                                });
-                                console.log('✅ Classes restored:', combinedClasses);
-                            }
-                        }
-                    });
-                });
-
-                classObserver.observe(submitButton, {
-                    attributes: true,
-                    attributeOldValue: true,
-                    attributeFilter: ['class']
-                });
-            }
-        }
 
         function isFormValid() {
             // Include nory-select alongside aria-required inputs
@@ -166,11 +117,6 @@
 
             if (!activeButton) return;
 
-            // Protect submit button when it appears
-            if (submitButton && submitButton.offsetParent !== null) {
-                protectSubmitButton();
-            }
-
             const valid = isFormValid();
 
             if (valid) {
@@ -193,12 +139,12 @@
         formWrapper.addEventListener('blur', () => setTimeout(updateButtonState, 150), true);
         formWrapper.addEventListener('change', () => setTimeout(updateButtonState, 150), true);
 
-        // Watch for step 2 appearing and run validation so Submit starts disabled.
-        // 600ms delay gives custom-hubspot-form.js time to inject nory-select first.
+        // Watch for step 2 appearing and run validation at multiple delays to
+        // ensure it fires after both HubSpot and custom-hubspot-form.js have finished.
         const stepObserver = new MutationObserver(() => {
             const submitButton = formWrapper.querySelector('button[type="submit"]');
             if (submitButton && submitButton.offsetParent !== null) {
-                setTimeout(updateButtonState, 600);
+                [300, 600, 1000, 1500].forEach(delay => setTimeout(updateButtonState, delay));
             }
         });
         stepObserver.observe(formWrapper, { childList: true, subtree: true });
