@@ -110,7 +110,14 @@
                                     .startsWith('hsfc-'));
                                 const combinedClasses = [...webflowClasses, ...hubspotClasses].join(' ');
 
+                                // Disconnect before restoring to avoid triggering the observer again
+                                classObserver.disconnect();
                                 submitButton.className = combinedClasses;
+                                classObserver.observe(submitButton, {
+                                    attributes: true,
+                                    attributeOldValue: true,
+                                    attributeFilter: ['class']
+                                });
                                 console.log('✅ Classes restored:', combinedClasses);
                             }
                         }
@@ -189,23 +196,6 @@
         formWrapper.addEventListener('input', () => setTimeout(updateButtonState, 150), true);
         formWrapper.addEventListener('blur', () => setTimeout(updateButtonState, 150), true);
         formWrapper.addEventListener('change', () => setTimeout(updateButtonState, 150), true);
-
-        // Watch for HubSpot replacing the form
-        const formObserver = new MutationObserver(() => {
-            const newForm = formWrapper.querySelector('form[data-instance-id]');
-            const newFormId = newForm ? newForm.getAttribute('data-instance-id') : null;
-
-            if (newFormId && newFormId !== currentFormId) {
-                console.log('🔄 Form replaced, re-initializing...');
-                formObserver.disconnect();
-                setTimeout(init, 100);
-            }
-        });
-
-        formObserver.observe(formWrapper, {
-            childList: true,
-            subtree: true
-        });
 
         console.log('✅ Active');
     }
