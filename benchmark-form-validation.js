@@ -89,25 +89,19 @@
             if (submitButton && !submitButton.dataset.protected) {
                 submitButton.dataset.protected = 'true';
 
-                // Store original classes
                 const originalClasses = submitButton.className;
                 console.log('🛡️ Protecting Submit button classes:', originalClasses);
 
-                // Watch for class changes
                 const classObserver = new MutationObserver((mutations) => {
                     mutations.forEach((mutation) => {
                         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                             const currentClasses = submitButton.className;
 
-                            // If HubSpot removed our Webflow classes, add them back
                             if (!currentClasses.includes('_wf-hs_button')) {
                                 console.log('⚠️ Webflow classes removed, restoring...');
 
-                                // Keep HubSpot's loading classes but add back Webflow classes
-                                const hubspotClasses = currentClasses.split(' ').filter(c => c.startsWith(
-                                    'hsfc-'));
-                                const webflowClasses = originalClasses.split(' ').filter(c => !c
-                                    .startsWith('hsfc-'));
+                                const hubspotClasses = currentClasses.split(' ').filter(c => c.startsWith('hsfc-'));
+                                const webflowClasses = originalClasses.split(' ').filter(c => !c.startsWith('hsfc-'));
                                 const combinedClasses = [...webflowClasses, ...hubspotClasses].join(' ');
 
                                 // Disconnect before restoring to avoid triggering the observer again
@@ -133,8 +127,9 @@
         }
 
         function isFormValid() {
+            // Include nory-select alongside aria-required inputs
             const visibleInputs = Array.from(formWrapper.querySelectorAll(
-                'input[aria-required="true"], select[aria-required="true"]'))
+                'input[aria-required="true"], select[aria-required="true"], select.nory-select'))
                 .filter(input => input.offsetParent !== null && input.type !== 'hidden');
 
             for (let visibleInput of visibleInputs) {
@@ -142,8 +137,7 @@
                     visibleInput.closest('[data-hsfc-id="NumberField"]') ||
                     visibleInput.closest('[data-hsfc-id="Row"]');
 
-                const hiddenInput = container ? container.querySelector('input[type="hidden"][name]') :
-                    null;
+                const hiddenInput = container ? container.querySelector('input[type="hidden"][name]') : null;
                 const valueToCheck = (hiddenInput && hiddenInput.value) ? hiddenInput.value : visibleInput.value;
 
                 if (!valueToCheck || valueToCheck.trim() === '') {
@@ -196,6 +190,15 @@
         formWrapper.addEventListener('input', () => setTimeout(updateButtonState, 150), true);
         formWrapper.addEventListener('blur', () => setTimeout(updateButtonState, 150), true);
         formWrapper.addEventListener('change', () => setTimeout(updateButtonState, 150), true);
+
+        // Watch for step 2 appearing and run validation so Submit starts disabled
+        const stepObserver = new MutationObserver(() => {
+            const submitButton = formWrapper.querySelector('button[type="submit"]');
+            if (submitButton && submitButton.offsetParent !== null) {
+                setTimeout(updateButtonState, 300);
+            }
+        });
+        stepObserver.observe(formWrapper, { childList: true, subtree: true });
 
         console.log('✅ Active');
     }
