@@ -137,7 +137,7 @@
 
                 const hiddenInput = container ? container.querySelector('input[type="hidden"][name]') :
                     null;
-                const valueToCheck = hiddenInput ? hiddenInput.value : visibleInput.value;
+                const valueToCheck = (hiddenInput && hiddenInput.value) ? hiddenInput.value : visibleInput.value;
 
                 if (!valueToCheck || valueToCheck.trim() === '') {
                     return false;
