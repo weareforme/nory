@@ -53,12 +53,19 @@
             });
 
             select.addEventListener('change', function () {
-                if (!hiddenInput) return;
-                // Use native setter so HubSpot's React state picks up the change
-                const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-                nativeSetter.call(hiddenInput, select.value);
-                hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
-                hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+                // Find the matching HubSpot list item by display label and click it
+                // directly — this lets HubSpot's own React handler update its state.
+                const selectedLabel = select.options[select.selectedIndex].textContent.trim();
+                const items = field.querySelectorAll('.hsfc-DropdownOptions__List__ListItem');
+                let matched = null;
+                items.forEach(function (item) {
+                    if (item.textContent.trim() === selectedLabel) matched = item;
+                });
+                if (!matched) return;
+                // Open the HubSpot dropdown, then click the matching item
+                const combobox = field.querySelector('input[role="combobox"]');
+                if (combobox) combobox.click();
+                setTimeout(function () { matched.click(); }, 50);
             });
 
             dropdownInput.style.display = 'none';
