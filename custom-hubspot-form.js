@@ -127,7 +127,9 @@
     const observer = new MutationObserver(function () {
         const form = document.querySelector('.hubspot-form');
         if (!form) return;
-        if (form.querySelector('.hsfc-DropdownField .hsfc-DropdownOptions__List__ListItem')) replaceDropdowns(form);
+        if (form.querySelector('.hsfc-DropdownField .hsfc-DropdownOptions__List__ListItem')) {
+            setTimeout(function () { replaceDropdowns(form); }, 300);
+        }
         if (form.querySelector('.hsfc-PhoneInput .hsfc-DropdownOptions__List__ListItem')) replacePhoneDropdown(form);
     });
 
