@@ -52,7 +52,9 @@
         }
         
         #benchmark-form-visible button[data-hsfc-id="Button"].btn-validation-disabled,
-        #benchmark-form-visible button[type="submit"].btn-validation-disabled {
+        #benchmark-form-visible button[type="submit"].btn-validation-disabled,
+        #benchmark-form-visible .hsfc-NavigationRow .hsfc-NavigationRow__Buttons button[type="submit"].btn-validation-disabled,
+        #benchmark-form-visible .hsfc-NavigationRow .hsfc-NavigationRow__Buttons button[data-hsfc-id="Button"].btn-validation-disabled {
           opacity: 0.5 !important;
           pointer-events: none !important;
           cursor: not-allowed !important;
@@ -191,11 +193,12 @@
         formWrapper.addEventListener('blur', () => setTimeout(updateButtonState, 150), true);
         formWrapper.addEventListener('change', () => setTimeout(updateButtonState, 150), true);
 
-        // Watch for step 2 appearing and run validation so Submit starts disabled
+        // Watch for step 2 appearing and run validation so Submit starts disabled.
+        // 600ms delay gives custom-hubspot-form.js time to inject nory-select first.
         const stepObserver = new MutationObserver(() => {
             const submitButton = formWrapper.querySelector('button[type="submit"]');
             if (submitButton && submitButton.offsetParent !== null) {
-                setTimeout(updateButtonState, 300);
+                setTimeout(updateButtonState, 600);
             }
         });
         stepObserver.observe(formWrapper, { childList: true, subtree: true });
