@@ -1,6 +1,6 @@
-// 🎯 HubSpot Multi-Step Form Validation Handler
+// HubSpot Multi-Step Form Validation Handler
 (function () {
-    console.log('🚀 Starting validation...');
+    console.log('Starting validation...');
 
     let retryCount = 0;
     const MAX_RETRIES = 60;
@@ -27,7 +27,7 @@
         }
 
         currentFormId = formId;
-        console.log('✅ Form found/updated');
+        console.log('Form found/updated');
 
         const nextButton = formWrapper.querySelector('button[type="button"][data-hsfc-id="Button"]');
         if (!nextButton) {
@@ -38,7 +38,7 @@
             return;
         }
 
-        console.log('✅ Button found');
+        console.log('Button found');
 
         // Add CSS once
         if (!document.getElementById('validation-styles')) {
@@ -61,7 +61,7 @@
         }
       `;
             document.head.appendChild(style);
-            console.log('✅ Styles added');
+            console.log('Styles added');
         }
 
         // Remove placeholders
@@ -122,11 +122,11 @@
             if (valid) {
                 activeButton.classList.remove('btn-validation-disabled');
                 activeButton.disabled = false;
-                console.log('🔓 Enabled');
+                console.log('Enabled');
             } else {
                 activeButton.classList.add('btn-validation-disabled');
                 activeButton.disabled = true;
-                console.log('🔒 Disabled');
+                console.log('Disabled');
             }
         }
 
@@ -139,17 +139,19 @@
         formWrapper.addEventListener('blur', () => setTimeout(updateButtonState, 150), true);
         formWrapper.addEventListener('change', () => setTimeout(updateButtonState, 150), true);
 
-        // Watch for step 2 appearing and run validation at multiple delays to
-        // ensure it fires after both HubSpot and custom-hubspot-form.js have finished.
+        // Watch for step 2 appearing, then disconnect immediately so it only fires once.
+        // Multiple delays ensure validation runs after both HubSpot and
+        // custom-hubspot-form.js have finished rendering step 2.
         const stepObserver = new MutationObserver(() => {
             const submitButton = formWrapper.querySelector('button[type="submit"]');
             if (submitButton && submitButton.offsetParent !== null) {
+                stepObserver.disconnect();
                 [300, 600, 1000, 1500].forEach(delay => setTimeout(updateButtonState, delay));
             }
         });
         stepObserver.observe(formWrapper, { childList: true, subtree: true });
 
-        console.log('✅ Active');
+        console.log('Active');
     }
 
     init();
