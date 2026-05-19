@@ -1,11 +1,43 @@
+<!-- Nory Site Header -->
+
+<!-- 1. GTM consent defaults — must be FIRST, before GTM loads -->
+<script>
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { dataLayer.push(arguments); };
+
+    // Set denied defaults before GTM fires anything
+    // Ketch will call gtag('consent','update') once user consents
+    gtag('consent', 'default', {
+        ad_storage: 'denied',
+        analytics_storage: 'denied',
+        functionality_storage: 'denied',
+        ad_user_data: 'granted',
+        ad_personalization: 'denied'
+    });
+</script>
+
+<!-- 2. GTM — loads unconditionally, consent mode controls what fires inside it -->
+<script>
+    (function (w, d, s, l, i) {
+        w[l] = w[l] || []; w[l].push({
+            'gtm.start':
+                new Date().getTime(), event: 'gtm.js'
+        }); var f = d.getElementsByTagName(s)[0],
+            j = d.createElement(s); j.async = true; j.src =
+                'https://load.sst.nory.ai/gtm.js?' + i; f.parentNode.insertBefore(j, f);
+    })(window, document, 'script', 'dataLayer', 'id=GTM-TSMXKK9');
+</script>
+
+<!-- 3. Ketch — resolves consent, drives everything below -->
+<script>!function () { window.semaphore = window.semaphore || [], window.ketch = function () { window.semaphore.push(arguments) }; var e = document.createElement("script"); e.type = "text/javascript", e.src = "https://global.ketchcdn.com/web/v3/config/nory/website_smart_tag/boot.js", e.defer = e.async = !0, document.getElementsByTagName("head")[0].appendChild(e) }();</script>
+
+
 <script src="https://cdn.prod.website-files.com/gsap/3.15.0/gsap.min.js" defer></script>
 <script src="https://cdn.prod.website-files.com/gsap/3.15.0/ScrollTrigger.min.js" defer></script>
 
 <link rel="preconnect" href="https://d3e54v103j8qbb.cloudfront.net" crossorigin>
 <link rel="preconnect" href="https://cdn.prod.website-files.com" crossorigin>
 <link rel="preconnect" href="https://vz-357930b3-fda.b-cdn.net" crossorigin>
-
-<!-- <meta name="msvalidate.01" content="3419F11AB2B4EC2A78E1538928BDD3D5" /> -->
 
 <!-- UTM -->
 <script>
@@ -28,4 +60,106 @@
         var stored = sessionStorage.getItem('nory_utms');
         return stored ? JSON.parse(stored) : {};
     };
+</script>
+
+<!-- Segment snippet — loads analytics.js -->
+<script>
+    !function () {
+        var i = "analytics", analytics = window[i] = window[i] || []; if (!analytics.initialize) if (analytics.invoked) window.console && console.error && console.error("Segment snippet included twice."); else {
+            analytics.invoked = !0; analytics.methods = ["trackSubmit", "trackClick", "trackLink", "trackForm", "pageview", "identify", "reset", "group", "track", "ready", "alias", "debug", "page", "screen", "once", "off", "on", "addSourceMiddleware", "addIntegrationMiddleware", "setAnonymousId", "addDestinationMiddleware", "register"]; analytics.factory = function (e) { return function () { if (window[i].initialized) return window[i][e].apply(window[i], arguments); var n = Array.prototype.slice.call(arguments); if (["track", "screen", "alias", "group", "page", "identify"].indexOf(e) > -1) { var c = document.querySelector("link[rel='canonical']"); n.push({ __t: "bpc", c: c && c.getAttribute("href") || void 0, p: location.pathname, u: location.href, s: location.search, t: document.title, r: document.referrer }) } n.unshift(e); analytics.push(n); return analytics } }; for (var n = 0; n < analytics.methods.length; n++) { var key = analytics.methods[n]; analytics[key] = analytics.factory(key) } analytics.load = function (key, n) { var t = document.createElement("script"); t.type = "text/javascript"; t.async = !0; t.setAttribute("data-global-segment-analytics-key", i); t.src = "https://cdn.segment.com/analytics.js/v1/" + key + "/analytics.min.js"; var r = document.getElementsByTagName("script")[0]; r.parentNode.insertBefore(t, r); analytics._loadOptions = n }; analytics._writeKey = "E3Y9Km9MK7PgAmMT6FKBgVidLmwt7KtQ";; analytics.SNIPPET_VERSION = "5.2.0";
+            analytics.load("E3Y9Km9MK7PgAmMT6FKBgVidLmwt7KtQ");
+        }
+    }();
+
+    /* Consent-aware page view — fires once, race-safe */
+    (function () {
+        var _pageFired = false;
+
+        function firePageView(consent) {
+            if (_pageFired) return;
+            _pageFired = true;
+
+            var purposes = consent.purposes || consent;
+
+            var consentObj = {
+                essential_services: !!purposes.essential_services,
+                analytics: !!purposes.analytics,
+                targeted_advertising: !!purposes.targeted_advertising
+            };
+
+            window.ketchConsent = consentObj;
+
+            var props = Object.assign(
+                { page_url: window.location.href },
+                window.getSessionUTMs ? window.getSessionUTMs() : {}
+            );
+
+            analytics.page(
+                '',
+                '',
+                props,
+                {
+                    context: {
+                        consent: {
+                            categoryPreferences: consentObj
+                        }
+                    },
+                    consent_essential_services: true,
+                    consent_analytics: consentObj.analytics,
+                    consent_targeted_advertising: consentObj.targeted_advertising
+                }
+            );
+        }
+
+        // Separate handler — updates GTM consent signals on EVERY consent change
+        // including when user accepts/rejects after initial page load
+        window.ketch('onConsent', function (consent) {
+            var purposes = consent.purposes || consent;
+
+            var consentObj = {
+                essential_services: true,
+                analytics: !!purposes.analytics,
+                targeted_advertising: !!purposes.targeted_advertising
+            };
+
+            // Always update window.ketchConsent so form script reads latest value
+            window.ketchConsent = consentObj;
+
+            // Always update Google consent mode signals
+            gtag('consent', 'update', {
+                analytics_storage: consentObj.analytics ? 'granted' : 'denied',
+                functionality_storage: consentObj.analytics ? 'granted' : 'denied',
+                ad_storage: consentObj.targeted_advertising ? 'granted' : 'denied',
+                ad_user_data: 'granted',
+                ad_personalization: consentObj.targeted_advertising ? 'granted' : 'denied'
+            });
+
+            // Always push to dataLayer with current accurate values
+            window.dataLayer = window.dataLayer || [];
+
+            // Matching trigger name so GTM tags continue firing unchanged
+            window.dataLayer.push({
+                event: 'cookie_consent_update',
+                consent_ad_storage: consentObj.targeted_advertising ? 'granted' : 'denied',
+                consent_analytics_storage: consentObj.analytics ? 'granted' : 'denied',
+                consent_functionality_storage: consentObj.analytics ? 'granted' : 'denied',
+                consent_ad_user_data: 'granted',
+                consent_ad_personalization: consentObj.targeted_advertising ? 'granted' : 'denied'
+            });
+
+            window.dataLayer.push({
+                event: 'ketch_consent_ready',
+                consent_analytics: consentObj.analytics,
+                consent_targeted_advertising: consentObj.targeted_advertising
+            });
+
+            // Page view fires only once — guarded by _pageFired
+            if (analytics.initialized) {
+                firePageView(consent);
+            } else {
+                analytics.ready(function () { firePageView(consent); });
+            }
+        });
+
+    })();
 </script>

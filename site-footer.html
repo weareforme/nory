@@ -1,0 +1,10 @@
+<!-- Nory Cookies JS -->
+<!-- <script defer src="https://cdn.jsdelivr.net/gh/weareforme/nory@1fd99a1/cookies.min.js"></script> -->
+
+<script>
+    if (window.location.hostname.includes('.webflow.io')) {
+        document.querySelectorAll('.staging-only').forEach((el) => {
+            el.style.setProperty('display', 'contents', 'important');
+        });
+    }
+</script>
