@@ -189,8 +189,8 @@
                 });
             }, { threshold: 0.1 });
 
-            // Start as wanting to play (autoplay)
-            wasPlaying = true;
+            // Start as wanting to play unless autoplay is explicitly disabled
+            wasPlaying = player.getAttribute('data-player-autoplay') !== 'false';
             io.observe(player);
         });
     }
