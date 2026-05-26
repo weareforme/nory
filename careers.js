@@ -49,11 +49,10 @@
 
             // --- Initial state ---
             setStatus('idle');
-            setMuted(true);
+            setMuted(player.getAttribute('data-player-autoplay') !== 'false');
             setActivated(false);
             setAttr('data-player-hover', 'idle');
 
-            video.muted = true;
             video.loop = true;
             video.playsInline = true;
             video.autoplay = false;
