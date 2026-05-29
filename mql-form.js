@@ -7,6 +7,31 @@ var HS_ORIGINS = [
   'https://forms.hsforms.com',
 ];
 
+// ─── Country grouping ─────────────────────────────────────────────────────────
+var MQL_COUNTRIES = [
+  // Europe (EU + broader Europe)
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT',
+  'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
+  'GB', 'NO', 'CH', 'IS', 'AL', 'AD', 'AM', 'AZ', 'BY', 'BA', 'GE', 'LI', 'MK', 'MD',
+  'MC', 'ME', 'RS', 'SM', 'TR', 'UA', 'VA', 'XK',
+  // US
+  'US',
+  // Arab countries
+  'AE', 'BH', 'DZ', 'EG', 'IQ', 'JO', 'KW', 'LB', 'LY', 'MA', 'MR', 'OM', 'PS', 'QA',
+  'SA', 'SD', 'SY', 'TN', 'YE',
+];
+
+var SAL_COUNTRIES = ['GB', 'IE', 'US'];
+
+function getCountryFlags(countryCode) {
+  if (!countryCode) return { is_mql_country: false, is_sal_country: false };
+  var code = countryCode.toUpperCase();
+  return {
+    is_mql_country: MQL_COUNTRIES.indexOf(code) !== -1,
+    is_sal_country: SAL_COUNTRIES.indexOf(code) !== -1,
+  };
+}
+
 // ─── Geo lookup on page load ──────────────────────────────────────────────────
 window.userGeo = { country: null };
 fetch('https://ipapi.co/json/')
@@ -104,12 +129,20 @@ window.addEventListener('message', function (event) {
     }
   };
 
+  var countryCode = (window.userGeo && window.userGeo.country_code) || null;
+  var countryFlags = getCountryFlags(countryCode);
+  var numVenues = capturedFields.num_venues || 0;
+
   var eventProps = Object.assign(
     {
       form_name: 'form_mql',
       page_url: window.location.href,
       country: (window.userGeo && window.userGeo.country_name) || null,
       country_code: (window.userGeo && window.userGeo.country_code) || null,
+      is_mql_country: countryFlags.is_mql_country,
+      is_sal_country: countryFlags.is_sal_country,
+      is_mql: countryFlags.is_mql_country,
+      is_sal: countryFlags.is_sal_country && numVenues > 1,
       consent_analytics: consent.analytics,
       consent_targeted_advertising: consent.targeted_advertising,
     },
