@@ -165,4 +165,11 @@ window.addEventListener('message', function (event) {
 
   // Form Submitted — always fires
   window.analytics.track('Form Submitted', eventProps, consentCtx);
+
+  // MQL — fires if country is in MQL list 
+  if (countryFlags.is_mql_country) { window.analytics.track('segment_mql', eventProps, consentCtx); }
+
+  // SAL — fires if country is in SAL list AND more than 1 venue 
+  if (countryFlags.is_sal_country && numVenues > 1) { window.analytics.track('segment_sal', eventProps, consentCtx); }
+
 });
