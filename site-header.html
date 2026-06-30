@@ -62,6 +62,35 @@
     };
 </script>
 
+<!-- Click-ID capture  -->
+<script>
+    (function () {
+        function setCookie(name, value, days) {
+            if (!value) return;
+            var d = new Date();
+            d.setTime(d.getTime() + days * 86400000);
+            document.cookie = name + '=' + encodeURIComponent(value) +
+                ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax;Secure';
+        }
+        function getParam(name) {
+            return new URLSearchParams(window.location.search).get(name);
+        }
+        setCookie('_click_gclid', getParam('gclid'), 90);
+        setCookie('_click_gbraid', getParam('gbraid'), 90);
+        setCookie('_click_wbraid', getParam('wbraid'), 90);
+        setCookie('_click_li_fat_id', getParam('li_fat_id'), 90);
+        setCookie('_click_msclkid', getParam('msclkid'), 90);
+
+        var fbclid = getParam('fbclid');
+        if (fbclid) {
+            setCookie('_click_fbclid', fbclid, 90);
+            if (!/(^|;\s*)_fbc=/.test(document.cookie)) {
+                setCookie('_click_fbc', 'fb.1.' + new Date().getTime() + '.' + fbclid, 90);
+            }
+        }
+    })();
+</script>
+
 <!-- Segment snippet — loads analytics.js -->
 <script>
     !function () {
