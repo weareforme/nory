@@ -117,6 +117,12 @@ const el = {
     backToStep1Btn: document.getElementById("back-to-step-1"),
 
     // --------------------------
+    // Hero (collapses to a slim band on Step 2)
+    // --------------------------
+    heroContent: document.querySelector(".n_hero_content"),
+    heroVisual: document.querySelector(".n_hero_visual"),
+
+    // --------------------------
     // Step 2: Restaurant type displays (all instances)
     // --------------------------
     restaurantTypeDisplays: document.querySelectorAll(".js-restaurant-type"),
@@ -545,10 +551,27 @@ function calculateStep2() {
 // ================================
 // Handles showing/hiding steps
 
+// Shows or hides the hero content and visual, leaving the band and back link in place
+// Setting display to an empty string hands control back to the Webflow stylesheet
+function setHeroVisible(isVisible) {
+    const value = isVisible ? "" : "none";
+
+    if (el.heroContent) {
+        el.heroContent.style.display = value;
+    }
+
+    if (el.heroVisual) {
+        el.heroVisual.style.display = value;
+    }
+}
+
 // Show Step 2 and hide Step 1
 function showStep2() {
     el.step1.style.display = "none";
     el.step2.style.display = "flex";
+
+    // Collapse the hero to a slim band
+    setHeroVisible(false);
 
     // Scroll to top of page
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -561,6 +584,9 @@ function showStep2() {
 function showStep1() {
     el.step2.style.display = "none";
     el.step1.style.display = "flex";
+
+    // Restore the full hero
+    setHeroVisible(true);
 
     // Scroll to top of page
     window.scrollTo({ top: 0, behavior: "smooth" });
