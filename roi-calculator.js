@@ -56,6 +56,14 @@ const RESTAURANT_DISPLAY_NAMES = {
 };
 
 // ================================
+// US HERO INTRO COPY
+// ================================
+// Shown in the hero intro when USD is selected. Copy supplied by Nory, do not edit
+// The default copy stays in Webflow and is restored for GBP / EUR
+
+const HERO_INTRO_US = "Built for multi-location operators in the US \u2014 from fast casual chains to upscale groups. In 60 seconds we'll show you what labor overspend and gross profit variance are costing you today, and what you'd recoup with Nory.";
+
+// ================================
 // DOM ELEMENTS
 // ================================
 // Cache all input and output elements for performance
@@ -121,6 +129,7 @@ const el = {
     // --------------------------
     heroContent: document.querySelector(".n_hero_content"),
     heroVisual: document.querySelector(".n_hero_visual"),
+    heroIntro: document.querySelector(".js-hero-intro p"),
 
     // --------------------------
     // Step 2: Restaurant type displays (all instances)
@@ -160,6 +169,13 @@ const el = {
 // Used to convert revenue when switching between monthly/annually
 
 let previousPeriod = "annually";
+
+// ================================
+// HERO INTRO DEFAULT COPY
+// ================================
+// Captured from Webflow on load so it can be restored when switching away from USD
+
+const heroIntroDefault = el.heroIntro ? el.heroIntro.textContent : "";
 
 // ================================
 // HELPER FUNCTIONS
@@ -565,6 +581,13 @@ function setHeroVisible(isVisible) {
     }
 }
 
+// Swaps the hero intro copy to the US version when USD is selected
+function updateHeroIntro() {
+    if (!el.heroIntro) return;
+
+    el.heroIntro.textContent = el.currencySelect.value === "USD" ? HERO_INTRO_US : heroIntroDefault;
+}
+
 // Show Step 2 and hide Step 1
 function showStep2() {
     el.step1.style.display = "none";
@@ -701,6 +724,10 @@ el.revenuePeriod.addEventListener("change", handleRevenuePeriodChange);
 // --------------------------
 // Recalculate when currency changes
 el.currencySelect.addEventListener("change", calculateStep1);
+
+// Swap the hero intro copy when currency changes, and set it on load
+el.currencySelect.addEventListener("change", updateHeroIntro);
+updateHeroIntro();
 
 // --------------------------
 // Step 1: Gross Profit inputs
