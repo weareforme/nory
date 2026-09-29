@@ -820,6 +820,11 @@ el.targetColInput.addEventListener("input", calculateStep1);
 el.restaurantType.addEventListener("change", updateShowResultsButtonState);
 el.locationsInput.addEventListener("input", updateShowResultsButtonState);
 
+// Default locations to 2 on load if empty. Users can still change it to 1 or more
+if (el.locationsInput.value === "") {
+    el.locationsInput.value = "2";
+}
+
 // --------------------------
 // Step 1: Show results button
 // --------------------------
