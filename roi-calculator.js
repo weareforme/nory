@@ -313,6 +313,12 @@ function formatRevenueInput(value) {
     return num.toLocaleString("en-GB");
 }
 
+// Sets a Step 1 calculated value, or a 0 at 50% opacity if its inputs have an error
+function setStep1Display(element, value, fallback, isInvalid) {
+    element.textContent = isInvalid ? fallback : value;
+    element.style.opacity = isInvalid ? "0.5" : "";
+}
+
 // Returns the display name for a restaurant type value
 function getRestaurantDisplayName() {
     const value = el.restaurantType.value;
@@ -447,17 +453,38 @@ function calculateStep1() {
     const labourOverspendAmountDisplay = labourOverspendAmountAnnual / displayDivisor;
 
     // --------------------------
+    // Check which inputs are showing an error
+    // --------------------------
+    // Values that depend on an input with an error show a faded 0 instead of a misleading figure
+    const revenueInvalid = hasFieldError(el.revenueInput);
+    const currentGpInvalid = hasFieldError(el.currentGpInput);
+    const targetGpInvalid = hasFieldError(el.targetGpInput);
+    const currentColInvalid = hasFieldError(el.currentColInput);
+    const targetColInvalid = hasFieldError(el.targetColInput);
+
+    const gpVarianceInvalid = currentGpInvalid || targetGpInvalid;
+    const labourOverspendInvalid = currentColInvalid || targetColInvalid;
+
+    // --------------------------
     // Update DOM with formatted values
     // --------------------------
-    el.currentGpValue.textContent = formatCurrency(currentGpValueDisplay);
-    el.targetGpValue.textContent = formatCurrency(targetGpValueDisplay);
-    el.gpVariancePercent.textContent = formatPercent(gpVariancePercent);
-    el.gpVarianceAmount.textContent = formatCurrency(gpVarianceAmountDisplay);
+    setStep1Display(el.currentGpValue, formatCurrency(currentGpValueDisplay), formatCurrency(0),
+        revenueInvalid || currentGpInvalid);
+    setStep1Display(el.targetGpValue, formatCurrency(targetGpValueDisplay), formatCurrency(0),
+        revenueInvalid || targetGpInvalid);
+    setStep1Display(el.gpVariancePercent, formatPercent(gpVariancePercent), formatPercent(0),
+        gpVarianceInvalid);
+    setStep1Display(el.gpVarianceAmount, formatCurrency(gpVarianceAmountDisplay), formatCurrency(0),
+        revenueInvalid || gpVarianceInvalid);
 
-    el.currentColValue.textContent = formatCurrency(currentColValueDisplay);
-    el.targetColValue.textContent = formatCurrency(targetColValueDisplay);
-    el.labourOverspendPercent.textContent = formatPercent(labourOverspendPercent);
-    el.labourOverspendAmount.textContent = formatCurrency(labourOverspendAmountDisplay);
+    setStep1Display(el.currentColValue, formatCurrency(currentColValueDisplay), formatCurrency(0),
+        revenueInvalid || currentColInvalid);
+    setStep1Display(el.targetColValue, formatCurrency(targetColValueDisplay), formatCurrency(0),
+        revenueInvalid || targetColInvalid);
+    setStep1Display(el.labourOverspendPercent, formatPercent(labourOverspendPercent), formatPercent(0),
+        labourOverspendInvalid);
+    setStep1Display(el.labourOverspendAmount, formatCurrency(labourOverspendAmountDisplay), formatCurrency(0),
+        revenueInvalid || labourOverspendInvalid);
 
     // Update button state
     updateShowResultsButtonState();
@@ -834,22 +861,29 @@ function clearFieldError(input) {
     }
 }
 
+// True if the field is currently showing an error
+function hasFieldError(input) {
+    return input.getAttribute("aria-invalid") === "true";
+}
+
 // Validates one field, shows or clears its error, and returns true if valid
+// Recalculates Step 1 so values linked to the field update with the error state
 function validateField(input) {
     const message = getFieldError(input);
 
     if (message) {
         showFieldError(input, message);
-        return false;
+    } else {
+        clearFieldError(input);
     }
 
-    clearFieldError(input);
-    return true;
+    calculateStep1();
+    return !message;
 }
 
 // Rechecks a field only if it is already showing an error
 function revalidateIfInvalid(input) {
-    if (input.getAttribute("aria-invalid") === "true") {
+    if (hasFieldError(input)) {
         validateField(input);
     }
 }
