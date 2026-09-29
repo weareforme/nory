@@ -55,6 +55,11 @@ const RESTAURANT_DISPLAY_NAMES = {
     "ghost-kitchen": "Ghost kitchen"
 };
 
+// US overrides, used when USD is selected. Option values stay the same
+const RESTAURANT_DISPLAY_NAMES_US = {
+    "pub-restaurant": "Bar & grill / sports bar"
+};
+
 // ================================
 // US HERO INTRO COPY
 // ================================
@@ -311,6 +316,11 @@ function formatRevenueInput(value) {
 // Returns the display name for a restaurant type value
 function getRestaurantDisplayName() {
     const value = el.restaurantType.value;
+
+    if (el.currencySelect.value === "USD" && RESTAURANT_DISPLAY_NAMES_US[value]) {
+        return RESTAURANT_DISPLAY_NAMES_US[value];
+    }
+
     return RESTAURANT_DISPLAY_NAMES[value] || "restaurant";
 }
 
@@ -624,6 +634,23 @@ function updateUsSpelling() {
     }
 }
 
+// Swaps restaurant type dropdown options to their US names when USD is selected
+// Original Webflow option text is stored on first run and restored for GBP / EUR
+function updateRestaurantTypeOptions() {
+    const isUsd = el.currencySelect.value === "USD";
+
+    Array.from(el.restaurantType.options).forEach(option => {
+        const usName = RESTAURANT_DISPLAY_NAMES_US[option.value];
+        if (!usName) return;
+
+        if (option.dataset.defaultText === undefined) {
+            option.dataset.defaultText = option.text;
+        }
+
+        option.text = isUsd ? usName : option.dataset.defaultText;
+    });
+}
+
 // Show Step 2 and hide Step 1
 function showStep2() {
     el.step1.style.display = "none";
@@ -768,6 +795,10 @@ updateHeroIntro();
 // Swap to US spelling when currency changes, and set it on load
 el.currencySelect.addEventListener("change", updateUsSpelling);
 updateUsSpelling();
+
+// Swap restaurant type options to US names when currency changes, and set them on load
+el.currencySelect.addEventListener("change", updateRestaurantTypeOptions);
+updateRestaurantTypeOptions();
 
 // --------------------------
 // Step 1: Gross Profit inputs
