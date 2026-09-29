@@ -178,6 +178,13 @@ let previousPeriod = "annually";
 const heroIntroDefault = el.heroIntro ? el.heroIntro.textContent : "";
 
 // ================================
+// US SPELLING ORIGINALS
+// ================================
+// Stores the original Webflow text of any node changed to US spelling, so it can be restored
+
+const usSpellingOriginals = new Map();
+
+// ================================
 // HELPER FUNCTIONS
 // ================================
 
@@ -589,6 +596,34 @@ function updateHeroIntro() {
     el.heroIntro.textContent = el.currencySelect.value === "USD" ? HERO_INTRO_US : heroIntroDefault;
 }
 
+// Swaps "Labour" to "Labor" in the calculator text when USD is selected
+// Only text is changed, so labels, ids and aria references stay intact
+// Original Webflow text is restored for GBP / EUR
+function updateUsSpelling() {
+    const isUsd = el.currencySelect.value === "USD";
+
+    [el.step1, el.step2].forEach(step => {
+        if (!step) return;
+
+        const walker = document.createTreeWalker(step, NodeFilter.SHOW_TEXT);
+        let node;
+
+        while ((node = walker.nextNode())) {
+            if (isUsd && /labour/i.test(node.nodeValue)) {
+                usSpellingOriginals.set(node, node.nodeValue);
+                node.nodeValue = node.nodeValue.replace(/Labour/g, "Labor").replace(/labour/g, "labor");
+            }
+        }
+    });
+
+    if (!isUsd) {
+        usSpellingOriginals.forEach((original, node) => {
+            node.nodeValue = original;
+        });
+        usSpellingOriginals.clear();
+    }
+}
+
 // Show Step 2 and hide Step 1
 function showStep2() {
     el.step1.style.display = "none";
@@ -729,6 +764,10 @@ el.currencySelect.addEventListener("change", calculateStep1);
 // Swap the hero intro copy when currency changes, and set it on load
 el.currencySelect.addEventListener("change", updateHeroIntro);
 updateHeroIntro();
+
+// Swap to US spelling when currency changes, and set it on load
+el.currencySelect.addEventListener("change", updateUsSpelling);
+updateUsSpelling();
 
 // --------------------------
 // Step 1: Gross Profit inputs
