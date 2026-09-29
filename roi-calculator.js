@@ -681,45 +681,201 @@ function showStep1() {
 // ================================
 // VALIDATION
 // ================================
-// Validates Step 1 inputs before showing Step 2
+// Inline field errors and sensible bounds for Step 1 inputs
+// Error elements and their styles are created by JS, so nothing is needed in Webflow
+// Styles match the site's form errors (book-a-chat)
 
+const VALIDATION_LIMITS = {
+    revenueAnnualMax: 1000000000,
+    locationsMin: 1,
+    locationsMax: 1000,
+    percentMin: 0,
+    percentMax: 100
+};
+
+const VALIDATION_MESSAGES = {
+    revenueRequired: "Please enter your revenue.",
+    revenueFormat: "Please use commas for thousands, e.g. 1,000,000.",
+    revenueMax: "Please enter a revenue under 1 billion a year.",
+    restaurantType: "Please select a restaurant type.",
+    locations: "Please enter a whole number between 1 and 1,000.",
+    percent: "Please enter a percentage between 0 and 100.",
+    targetGp: "Target should be equal to or higher than current.",
+    targetCol: "Target should be equal to or lower than current."
+};
+
+const FIELD_ERROR_CLASS = "roi-calculator_field-error";
+
+// Adds the error styles to the page once
+function injectFieldErrorStyles() {
+    const style = document.createElement("style");
+    style.textContent =
+        // The field wrapper already has an 8px gap, so 2px here gives 10px below the input
+        "." + FIELD_ERROR_CLASS + "{color:#E51520;font-size:14px;font-weight:500;line-height:1.4;margin-top:2px;}" +
+        // Screen reader only prefix
+        "." + FIELD_ERROR_CLASS + "-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}" +
+        // Keeps side by side fields top aligned when one of them shows an error
+        ".roi-calculator_row:has(." + FIELD_ERROR_CLASS + "){align-items:flex-start;}";
+    document.head.appendChild(style);
+}
+
+// True if the revenue looks like it uses full stops for thousands, e.g. 1.000.000
+function hasThousandsFullStop(value) {
+    return /\.\d{3}(\D|$)/.test(value.trim());
+}
+
+// Returns the value as a number, or null if empty or not a number
+function getNumberValue(input) {
+    const raw = input.value.trim();
+    if (raw === "") return null;
+
+    const num = Number(raw);
+    return isNaN(num) ? null : num;
+}
+
+// True if the input holds a percentage between 0 and 100
+function isValidPercent(input) {
+    const num = getNumberValue(input);
+    return num !== null && num >= VALIDATION_LIMITS.percentMin && num <= VALIDATION_LIMITS.percentMax;
+}
+
+// Returns the error message for a field, or an empty string if it is valid
+function getFieldError(input) {
+    if (input === el.revenueInput) {
+        const raw = input.value.trim();
+
+        if (hasThousandsFullStop(raw)) return VALIDATION_MESSAGES.revenueFormat;
+        if (parseRevenue(raw) <= 0) return VALIDATION_MESSAGES.revenueRequired;
+
+        const isMonthly = el.revenuePeriod.value === "monthly";
+        const annualRevenue = isMonthly ? parseRevenue(raw) * 12 : parseRevenue(raw);
+        if (annualRevenue > VALIDATION_LIMITS.revenueAnnualMax) return VALIDATION_MESSAGES.revenueMax;
+
+        return "";
+    }
+
+    if (input === el.restaurantType) {
+        return input.value ? "" : VALIDATION_MESSAGES.restaurantType;
+    }
+
+    if (input === el.locationsInput) {
+        const num = getNumberValue(input);
+        const isValid = num !== null && Number.isInteger(num) &&
+            num >= VALIDATION_LIMITS.locationsMin && num <= VALIDATION_LIMITS.locationsMax;
+        return isValid ? "" : VALIDATION_MESSAGES.locations;
+    }
+
+    // Percentage fields
+    if (!isValidPercent(input)) return VALIDATION_MESSAGES.percent;
+
+    // Target GP must be equal to or higher than current GP
+    if (input === el.targetGpInput && isValidPercent(el.currentGpInput) &&
+        getNumberValue(input) < getNumberValue(el.currentGpInput)) {
+        return VALIDATION_MESSAGES.targetGp;
+    }
+
+    // Target COL must be equal to or lower than current COL
+    if (input === el.targetColInput && isValidPercent(el.currentColInput) &&
+        getNumberValue(input) > getNumberValue(el.currentColInput)) {
+        return VALIDATION_MESSAGES.targetCol;
+    }
+
+    return "";
+}
+
+// Shows an error below the field and links it to the input for screen readers
+function showFieldError(input, message) {
+    const wrapper = input.closest(".roi-calculator_field");
+    if (!wrapper) return;
+
+    let error = wrapper.querySelector("." + FIELD_ERROR_CLASS);
+
+    if (!error) {
+        error = document.createElement("div");
+        error.className = FIELD_ERROR_CLASS;
+        error.id = input.id + "-error";
+        error.setAttribute("aria-live", "polite");
+        wrapper.appendChild(error);
+    }
+
+    error.innerHTML = "";
+    const prefix = document.createElement("span");
+    prefix.className = FIELD_ERROR_CLASS + "-sr";
+    prefix.textContent = "Error: ";
+    error.appendChild(prefix);
+    error.appendChild(document.createTextNode(message));
+
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("aria-describedby", error.id);
+
+    // Keep the value display (e.g. $0) aligned to the input, not the input plus error
+    const valueDisplay = wrapper.querySelector(".roi-calculator_field-value");
+    if (valueDisplay) {
+        valueDisplay.style.bottom = "auto";
+        valueDisplay.style.height = input.offsetHeight + "px";
+    }
+}
+
+// Removes the error from a field
+function clearFieldError(input) {
+    const wrapper = input.closest(".roi-calculator_field");
+    if (!wrapper) return;
+
+    const error = wrapper.querySelector("." + FIELD_ERROR_CLASS);
+    if (error) error.remove();
+
+    input.removeAttribute("aria-invalid");
+    input.removeAttribute("aria-describedby");
+
+    const valueDisplay = wrapper.querySelector(".roi-calculator_field-value");
+    if (valueDisplay) {
+        valueDisplay.style.bottom = "";
+        valueDisplay.style.height = "";
+    }
+}
+
+// Validates one field, shows or clears its error, and returns true if valid
+function validateField(input) {
+    const message = getFieldError(input);
+
+    if (message) {
+        showFieldError(input, message);
+        return false;
+    }
+
+    clearFieldError(input);
+    return true;
+}
+
+// Rechecks a field only if it is already showing an error
+function revalidateIfInvalid(input) {
+    if (input.getAttribute("aria-invalid") === "true") {
+        validateField(input);
+    }
+}
+
+// Validates all Step 1 fields before showing Step 2 and focuses the first invalid one
 function validateStep1() {
-    const revenue = parseRevenue(el.revenueInput.value);
-    const restaurantType = el.restaurantType.value;
-    const locations = parseInt(el.locationsInput.value) || 0;
-    const currentGp = el.currentGpInput.value;
-    const targetGp = el.targetGpInput.value;
-    const currentCol = el.currentColInput.value;
-    const targetCol = el.targetColInput.value;
+    const fields = [
+        el.revenueInput,
+        el.restaurantType,
+        el.locationsInput,
+        el.currentGpInput,
+        el.targetGpInput,
+        el.currentColInput,
+        el.targetColInput
+    ];
 
-    // Check all required fields have values
-    if (revenue <= 0) {
-        alert("Please enter your revenue");
-        el.revenueInput.focus();
-        return false;
-    }
+    let firstInvalid = null;
 
-    if (!restaurantType) {
-        alert("Please select a restaurant type");
-        el.restaurantType.focus();
-        return false;
-    }
+    fields.forEach(input => {
+        if (!validateField(input) && !firstInvalid) {
+            firstInvalid = input;
+        }
+    });
 
-    if (locations <= 0) {
-        alert("Please enter the number of locations");
-        el.locationsInput.focus();
-        return false;
-    }
-
-    if (currentGp === "" || targetGp === "") {
-        alert("Please enter your gross profit percentages");
-        el.currentGpInput.focus();
-        return false;
-    }
-
-    if (currentCol === "" || targetCol === "") {
-        alert("Please enter your cost of labour percentages");
-        el.currentColInput.focus();
+    if (firstInvalid) {
+        firstInvalid.focus();
         return false;
     }
 
@@ -768,8 +924,11 @@ function updateShowResultsButtonState() {
 // --------------------------
 // Format revenue input on blur (when user leaves field)
 // Adds comma separators for readability
+// Skipped for full stop thousands (e.g. 1.000.000) so the value is kept for the error message
 el.revenueInput.addEventListener("blur", function () {
-    this.value = formatRevenueInput(this.value);
+    if (!hasThousandsFullStop(this.value)) {
+        this.value = formatRevenueInput(this.value);
+    }
     calculateStep1();
 });
 
@@ -824,6 +983,37 @@ el.locationsInput.addEventListener("input", updateShowResultsButtonState);
 if (el.locationsInput.value === "") {
     el.locationsInput.value = "2";
 }
+
+// --------------------------
+// Step 1: Field validation
+// --------------------------
+// Check a field when the user leaves it, then recheck as they type once an error is showing
+injectFieldErrorStyles();
+
+[
+    el.revenueInput,
+    el.restaurantType,
+    el.locationsInput,
+    el.currentGpInput,
+    el.targetGpInput,
+    el.currentColInput,
+    el.targetColInput
+].forEach(input => {
+    input.addEventListener("blur", () => validateField(input));
+    input.addEventListener("input", () => revalidateIfInvalid(input));
+    input.addEventListener("change", () => revalidateIfInvalid(input));
+});
+
+// Recheck targets when their current value changes, if the target is filled in
+el.currentGpInput.addEventListener("blur", () => {
+    if (el.targetGpInput.value !== "") validateField(el.targetGpInput);
+});
+el.currentColInput.addEventListener("blur", () => {
+    if (el.targetColInput.value !== "") validateField(el.targetColInput);
+});
+
+// Recheck revenue when the period changes, as the upper limit is annual
+el.revenuePeriod.addEventListener("change", () => revalidateIfInvalid(el.revenueInput));
 
 // --------------------------
 // Step 1: Show results button
