@@ -550,7 +550,8 @@ function calculateStep2() {
 
     // Use formatCurrencyCost for Nory Investment (rounds UP to avoid underquoting)
     el.noryInvestmentValue.textContent = formatCurrencyCost(noryInvestmentDisplay);
-    el.noryInvestmentDescription.textContent = periodText + " for " + locations + " locations @ " +
+    const locationsText = locations === 1 ? " location @ " : " locations @ ";
+    el.noryInvestmentDescription.textContent = periodText + " for " + locations + locationsText +
         symbol + noryCostPerMonth + " p/month";
 
     // Update savings label based on period
