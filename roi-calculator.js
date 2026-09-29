@@ -12,7 +12,7 @@ const CONFIG = {
     noryCostPerMonth: {
         GBP: 299,
         EUR: 349,
-        USD: 379
+        USD: 399
     },
     verticals: {
         "fine-dining": { colReduction: 10, gpVarianceReduction: 50 },
