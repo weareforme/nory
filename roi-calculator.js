@@ -66,7 +66,7 @@ const RESTAURANT_DISPLAY_NAMES_US = {
 // Shown in the hero intro when USD is selected. Copy supplied by Nory, do not edit
 // The default copy stays in Webflow and is restored for GBP / EUR
 
-const HERO_INTRO_US = "Built for multi-location operators in the US \u2014 from fast casual chains to upscale groups. In 60 seconds we'll show you what labor overspend and gross profit variance are costing you today, and what you'd recoup with Nory.";
+const HERO_INTRO_US = "Built for multi-location operators in the US \u2014 from 2 to 2000+ locations. In 60 seconds we'll show you what labor overspend and gross profit variance are costing you today, and what you could recoup with Nory.";
 
 // ================================
 // DOM ELEMENTS
