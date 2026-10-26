@@ -122,7 +122,11 @@ function getUrlParam(name) {
     if (!form) return;
 
     // Inject anonymous ID
-    var anonId = window.analytics && window.analytics.user().anonymousId();
+    // Segment may not have loaded (blocked, or still the snippet stub), so
+    // skip the anonymous ID rather than throw and lose the rest of the capture.
+    var anonId = window.analytics && typeof window.analytics.user === 'function'
+      ? window.analytics.user().anonymousId()
+      : null;
     var anonField = form.querySelector(ANON_ID_FIELD);
     if (anonField && anonId) setFieldValue(anonField, anonId);
 
