@@ -2,13 +2,22 @@ console.log('Enhanced Conversions: Script loaded');
 
 (function () {
     let lastCapturedData = '';
+    // Last form the visitor typed into, so pages embedding the form twice
+    // read from the one being used rather than the first on the page.
+    let activeForm = null;
+
+    document.addEventListener('input', function (e) {
+        const form = e.target.closest && e.target.closest('form');
+        if (form) activeForm = form;
+    }, true);
 
     function captureAndStoreData() {
+        const scope = activeForm || document;
         const formData = {
-            email: document.querySelector('input[name="0-1/email"]')?.value || '',
-            phone: document.querySelector('input[name="0-1/phone"]')?.value || '',
-            firstName: document.querySelector('input[name="0-1/firstname"]')?.value || '',
-            lastName: document.querySelector('input[name="0-1/lastname"]')?.value || ''
+            email: scope.querySelector('input[name="0-1/email"]')?.value || '',
+            phone: scope.querySelector('input[name="0-1/phone"]')?.value || '',
+            firstName: scope.querySelector('input[name="0-1/firstname"]')?.value || '',
+            lastName: scope.querySelector('input[name="0-1/lastname"]')?.value || ''
         };
 
         // Only store if we have at least email and data has changed
