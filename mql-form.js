@@ -63,16 +63,16 @@ if (document.querySelector('.hubspot-form')) {
   }
 
   function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-  return null;
-} 
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  }
 
-function getUrlParam(name) {
-  const params = new URLSearchParams(window.location.search);
-  return params.get(name);
-}
+  function getUrlParam(name) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
 
   // Normalize PII to lift match rates on ad destinations (Meta CAPI, Google EC)
   function normalizeEmail(v) {
@@ -116,8 +116,8 @@ function getUrlParam(name) {
   // ─── Step 1: Capture fields + inject anonymous ID and UTMs on form submit ──────
   var capturedFields = {};
 
-  function captureAndInject() {
-    var form = document.querySelector(FORM_SELECTOR);
+  // `form` is the specific .hubspot-form the visitor is submitting
+  function captureAndInject(form) {
     if (!form) return;
 
     // Inject anonymous ID
@@ -166,13 +166,18 @@ function getUrlParam(name) {
     };
   }
 
-  // Cover both click and Enter key submission
+  // Cover both click and Enter key submission.
+  // Each handler resolves the form the event came from, so pages with
+  // multiple embeds of the same form read from the one being submitted.
   document.addEventListener('click', function (e) {
-    if (e.target.closest('.hsfc-NavigationRow__Buttons button')) captureAndInject();
+    var btn = e.target.closest('.hsfc-NavigationRow__Buttons button');
+    if (!btn) return;
+    captureAndInject(btn.closest(FORM_SELECTOR));
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') captureAndInject();
+    if (e.key !== 'Enter') return;
+    captureAndInject(e.target.closest && e.target.closest(FORM_SELECTOR));
   });
 
   // ─── Step 2: Fire Segment event once HubSpot confirms submission ───────────────
@@ -233,10 +238,10 @@ function getUrlParam(name) {
     // Form Submitted — always fires
     window.analytics.track('Form Submitted', eventProps, consentCtx);
 
-    // MQL — fires if country is in MQL list 
+    // MQL — fires if country is in MQL list
     if (countryFlags.is_mql_country) { window.analytics.track('segment_mql', eventProps, consentCtx); }
 
-    // SAL — fires if country is in SAL list AND more than 1 venue 
+    // SAL — fires if country is in SAL list AND more than 1 venue
     if (countryFlags.is_sal_country && numVenues > 1) { window.analytics.track('segment_sal', eventProps, consentCtx); }
 
   });
