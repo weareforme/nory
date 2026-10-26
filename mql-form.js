@@ -116,8 +116,9 @@ function getUrlParam(name) {
   // ─── Step 1: Capture fields + inject anonymous ID and UTMs on form submit ──────
   var capturedFields = {};
 
-  function captureAndInject() {
-    var form = document.querySelector(FORM_SELECTOR);
+  // Scoped to the form the visitor used, so pages embedding the form twice
+  // read and inject into the right one.
+  function captureAndInject(form) {
     if (!form) return;
 
     // Inject anonymous ID
@@ -168,11 +169,12 @@ function getUrlParam(name) {
 
   // Cover both click and Enter key submission
   document.addEventListener('click', function (e) {
-    if (e.target.closest('.hsfc-NavigationRow__Buttons button')) captureAndInject();
+    var btn = e.target.closest('.hsfc-NavigationRow__Buttons button');
+    if (btn) captureAndInject(btn.closest(FORM_SELECTOR));
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') captureAndInject();
+    if (e.key === 'Enter') captureAndInject(e.target.closest(FORM_SELECTOR));
   });
 
   // ─── Step 2: Fire Segment event once HubSpot confirms submission ───────────────
